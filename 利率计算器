@@ -1,53 +1,72 @@
-from flask import Flask, jsonify, request
-import math
-import psycopg2  # Assuming PostgreSQL is used
-
-app = Flask(__name__)
-
-# Database connection setup (Replace with your actual database credentials)
-conn = psycopg2.connect(database="your_db", user="your_user", password="your_password", host="your_host", port="your_port")
-cursor = conn.cursor()
-
+@app.route('/t/calculate', methods=['POST'])
+def calculator():
+    data = request.get_json()  # 获取来自前端的 JSON 数据
+    evalString = data['expression']  
+    displayString = calculate_expression(evalString)  
+    cursor.execute("INSERT INTO calculations (expression, result) VALUES (%s, %s)", (evalString, displayString))  
+    conn.commit()  
+ 
+    return jsonify({'status': 'success'})
+@app.route('/t/calculate-records', methods=['GET'])
+def get_calculation_records():
+    cursor.execute("SELECT expression, result FROM calculations ORDER BY id DESC LIMIT 10")
+    records = cursor.fetchall()
+ 
+    response = []
+    for record in records:
+        expression, result = record
+        response.append({'expression': expression, 'result': result})
+ 
+    return jsonify(response)
 def calculate_expression(expression):
     try:
-        expression = expression.replace("π", str(math.pi)).replace("e", str(math.e))
+        expression = expression.replace("π", str(math.pi))
+        expression = expression.replace("e", str(math.e))
         result = eval(expression)
         return result
     except Exception as e:
-        print("Calculation error:", str(e))
+        print("计算错误：", str(e))
         return None
-
-@app.route('/t/calculate', methods=['POST'])
-def calculator():
-    data = request.get_json()
-    eval_string = data['expression'] if 'expression' in data else None
-    
-    if eval_string:
-        display_string = calculate_expression(eval_string)
-        if display_string is not None:
-            try:
-                cursor.execute("INSERT INTO calculations (expression, result) VALUES (%s, %s)", (eval_string, display_string))
-                conn.commit()
-                return jsonify({'status': 'success'})
-            except Exception as e:
-                conn.rollback()
-                return jsonify({'status': 'error', 'message': str(e)}), 500
-        else:
-            return jsonify({'status': 'error', 'message': 'Invalid expression'}), 400
-    else:
-        return jsonify({'status': 'error', 'message': 'No expression provided'}), 400
-
-@app.route('/t/calculate-records', methods=['GET'])
-def get_calculation_records():
-    try:
-        cursor.execute("SELECT expression, result FROM calculations ORDER BY id DESC LIMIT 10")
-        records = cursor.fetchall()
-        response = [{'expression': expr, 'result': res} for expr, res in records]
-        return jsonify(response)
-    except Exception as e:
-        return jsonify({'status': 'error', 'message': str(e)}), 500
-
-if __name__ == '__main__':
-    app.run(debug=True)
+var requestData = {
+      expression: expression
+    };
+ 
+    fetch('/t/calculate', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify(requestData)
+    })
+      .then(response => response.json())
+      .then(data => {
+         show(data.result);
+        console.log(data);
+      })
+      .catch(error => {
+        console.error('Error:', error);
+      });
+  } catch {
+    show("error");
+  }
+}
+$(".operators[value='ans']").click(function() {
+  fetch('/t/calculate-records')
+  .then(response => response.json())
+  .then(data => {
+      const List = document.getElementById('records-container');
+      List.innerHTML = '';
+      data.forEach(record => {
+      const calculationItem = document.createElement('li');
+      calculationItem.textContent =record.expression +"="+ record.result;
+      List.appendChild(calculationItem);
+      });
+   });
+});
+function clr() {
+  displayString = "0";
+  evalString = "0";
+  show(displayString); // 更新显示区域
+}
 
 
