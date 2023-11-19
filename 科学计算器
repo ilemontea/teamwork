@@ -1,0 +1,59 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <title>CalBeta</title>
+    <link rel="stylesheet" href="./cal.css">
+    <style>
+    </style>
+    <script src="http://ajax.aspnetcdn.com/ajax/jQuery/jquery-1.8.0.js"></script>
+    <script src="https://cdn.staticfile.org/vue/2.2.2/vue.min.js"></script>
+</head>
+<body>
+    <div id="app"></div>
+    <script src="./calBeta.js"></script>
+</body>
+</html>
+const app = new Vue({
+    el: '#app',
+    data: {
+        message: 'Hello Vue!',
+        firstnum: '',
+        endnum: '',
+        operator: '',
+        fscod: true,
+        infos: '',
+        listNum: 1
+    },
+    methods: {
+        def() {
+            this.getList(this.listNum);
+        },
+        clearDisplay() {
+            this.infos = '';
+            this.firstnum = '';
+            this.endnum = '';
+        },
+        getNumber(e) {
+            if (this.fscod) {
+                this.firstnum += e + '';
+                this.infos = this.firstnum + '';
+            } else {
+                this.endnum += e + '';
+                this.infos = this.firstnum + this.operator + '' + this.endnum + '';
+            }
+        },
+        getNumber1(e) {
+            console.log('222', e);
+        },
+        getOperator(e) {
+            this.fscod = false;
+            this.operator = e;
+            this.infos = this.firstnum + this.operator + '';
+        },
+        calculate() {
+        },
+        getList(str) {
+        }
+    }
+});
